@@ -1,14 +1,23 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { ToolSelection } from "@/components/ToolSelection";
+import { DashboardBuilder } from "@/components/DashboardBuilder";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
+
+  const handleToolSelect = (tool: string) => {
+    setSelectedTool(tool);
+  };
+
+  const handleBack = () => {
+    setSelectedTool(null);
+  };
+
+  if (selectedTool) {
+    return <DashboardBuilder selectedTool={selectedTool} onBack={handleBack} />;
+  }
+
+  return <ToolSelection onToolSelect={handleToolSelect} />;
 };
 
 export default Index;
