@@ -1,12 +1,51 @@
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { BarChart3, TrendingUp, Database, LogOut } from "lucide-react";
 import { ToolCard } from "./ToolCard";
-import { Upload, Database, BarChart } from "lucide-react";
+import { CSVUpload } from "@/components/CSVUpload";
+import { DatasetList } from "@/components/DatasetList";
+import { useAuth } from "@/hooks/useAuth";
+import { useDatasets, Dataset } from "@/hooks/useDatasets";
+import { useToast } from "@/components/ui/use-toast";
 import heroImage from "@/assets/dashboard-hero.jpg";
 
 interface ToolSelectionProps {
-  onToolSelect: (tool: string) => void;
+  onToolSelect: (tool: string, dataset?: Dataset) => void;
 }
 
 export function ToolSelection({ onToolSelect }: ToolSelectionProps) {
+  const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
+  const { signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleToolSelect = (toolId: string) => {
+    if (!selectedDataset) {
+      toast({
+        title: 'Select a dataset',
+        description: 'Please select a dataset first before choosing a visualization style.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    onToolSelect(toolId, selectedDataset);
+  };
+
+  const handleUploadSuccess = (datasetId: string) => {
+    // The dataset list will automatically refresh
+  };
+
   const tools = [
     {
       id: "tableau",
@@ -48,84 +87,103 @@ export function ToolSelection({ onToolSelect }: ToolSelectionProps) {
 
   return (
     <div className="min-h-screen bg-gradient-dashboard">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-primary">
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Data Analytics
-              <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
-                Dashboard Builder
-              </span>
-            </h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
-              Transform your data into powerful insights with our professional-grade dashboard tools. 
-              Choose your preferred analytics style and start building beautiful visualizations.
-            </p>
-            <div className="flex items-center justify-center gap-6 text-blue-200">
-              <div className="flex items-center gap-2">
-                <Database className="w-5 h-5" />
-                <span className="text-sm">Multiple Data Sources</span>
+      {/* Header */}
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary rounded-lg">
+                <BarChart3 className="h-6 w-6 text-primary-foreground" />
               </div>
-              <div className="flex items-center gap-2">
-                <BarChart className="w-5 h-5" />
-                <span className="text-sm">Interactive Charts</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Upload className="w-5 h-5" />
-                <span className="text-sm">Easy Import</span>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">VisualBoard</h1>
+                <p className="text-sm text-muted-foreground">Transform your data into insights</p>
               </div>
             </div>
+            <Button 
+              onClick={handleSignOut}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </Button>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Tool Selection */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">
-            Choose Your Analytics Platform
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Select the dashboard style that best fits your workflow and analytical needs. 
-            Each option provides unique features and visualization capabilities.
-          </p>
-        </div>
+      <div className="max-w-7xl mx-auto p-6">
+        <Tabs defaultValue="data" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="data" className="text-sm">
+              Data Management
+            </TabsTrigger>
+            <TabsTrigger value="visualize" className="text-sm">
+              Create Visualization
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {tools.map((tool) => (
-            <ToolCard
-              key={tool.id}
-              title={tool.title}
-              description={tool.description}
-              features={tool.features}
-              image={tool.image}
-              onSelect={() => onToolSelect(tool.id)}
-              variant={tool.id as "tableau" | "powerbi" | "custom"}
-            />
-          ))}
-        </div>
+          <TabsContent value="data" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <CSVUpload onUploadSuccess={handleUploadSuccess} />
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Your Datasets</h3>
+                <DatasetList 
+                  onSelectDataset={setSelectedDataset}
+                  selectedDatasetId={selectedDataset?.id}
+                />
+              </div>
+            </div>
+          </TabsContent>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="text-center p-6 bg-card rounded-lg shadow-dashboard">
-            <div className="text-2xl font-bold text-primary">500+</div>
-            <div className="text-sm text-muted-foreground">Chart Types</div>
-          </div>
-          <div className="text-center p-6 bg-card rounded-lg shadow-dashboard">
-            <div className="text-2xl font-bold text-chart-2">50+</div>
-            <div className="text-sm text-muted-foreground">Data Sources</div>
-          </div>
-          <div className="text-center p-6 bg-card rounded-lg shadow-dashboard">
-            <div className="text-2xl font-bold text-accent">99.9%</div>
-            <div className="text-sm text-muted-foreground">Uptime</div>
-          </div>
-          <div className="text-center p-6 bg-card rounded-lg shadow-dashboard">
-            <div className="text-2xl font-bold text-chart-4">24/7</div>
-            <div className="text-sm text-muted-foreground">Support</div>
-          </div>
-        </div>
+          <TabsContent value="visualize" className="space-y-6">
+            {selectedDataset ? (
+              <div className="space-y-6">
+                <div className="bg-card/50 rounded-lg p-4 border border-border">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    Selected Dataset: {selectedDataset.name}
+                  </h3>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span>{selectedDataset.row_count.toLocaleString()} rows</span>
+                    <span>{selectedDataset.columns.length} columns</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
+                    Choose Visualization Style
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {tools.map((tool) => (
+                      <ToolCard
+                        key={tool.id}
+                        title={tool.title}
+                        description={tool.description}
+                        features={tool.features}
+                        image={tool.image}
+                        variant={tool.id as any}
+                        onSelect={() => handleToolSelect(tool.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Database className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  Select a Dataset First
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Go to Data Management tab to upload or select a dataset before creating visualizations
+                </p>
+                <Button onClick={() => document.querySelector<HTMLButtonElement>('[value="data"]')?.click()}>
+                  Go to Data Management
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

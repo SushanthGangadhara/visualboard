@@ -14,7 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dashboards: {
+        Row: {
+          config: Json
+          created_at: string
+          dataset_id: string | null
+          id: string
+          name: string
+          tool_type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          dataset_id?: string | null
+          id?: string
+          name: string
+          tool_type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          dataset_id?: string | null
+          id?: string
+          name?: string
+          tool_type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboards_dataset_id_fkey"
+            columns: ["dataset_id"]
+            isOneToOne: false
+            referencedRelation: "datasets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_rows: {
+        Row: {
+          created_at: string
+          dataset_id: string | null
+          id: string
+          row_data: Json
+          row_number: number
+        }
+        Insert: {
+          created_at?: string
+          dataset_id?: string | null
+          id?: string
+          row_data: Json
+          row_number: number
+        }
+        Update: {
+          created_at?: string
+          dataset_id?: string | null
+          id?: string
+          row_data?: Json
+          row_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_rows_dataset_id_fkey"
+            columns: ["dataset_id"]
+            isOneToOne: false
+            referencedRelation: "datasets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      datasets: {
+        Row: {
+          columns: Json
+          created_at: string
+          file_path: string
+          filename: string
+          id: string
+          name: string
+          row_count: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          columns?: Json
+          created_at?: string
+          file_path: string
+          filename: string
+          id?: string
+          name: string
+          row_count?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          columns?: Json
+          created_at?: string
+          file_path?: string
+          filename?: string
+          id?: string
+          name?: string
+          row_count?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
