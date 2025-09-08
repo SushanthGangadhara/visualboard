@@ -89,7 +89,15 @@ export function CSVUpload({ onUploadSuccess }: CSVUploadProps) {
           Upload CSV Dataset
         </CardTitle>
         <CardDescription>
-          Upload a CSV file to create a new dataset for visualization
+          Upload a CSV file to create a new dataset for visualization. You can also try our{' '}
+          <a 
+            href="/sample-sales-data.csv" 
+            download 
+            className="text-primary hover:underline"
+          >
+            sample sales data
+          </a>{' '}
+          to test the functionality.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -66,6 +66,13 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Create client with service role for storage access
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
+    // Create client with anon key for user auth
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -90,8 +97,8 @@ Deno.serve(async (req) => {
 
     console.log('Processing CSV:', { datasetName, filePath });
 
-    // Download the file from storage
-    const { data: fileData, error: downloadError } = await supabase.storage
+    // Download the file from storage using admin client
+    const { data: fileData, error: downloadError } = await supabaseAdmin.storage
       .from('csv-files')
       .download(filePath);
 
@@ -118,8 +125,8 @@ Deno.serve(async (req) => {
 
     // User is already validated above
 
-    // Create dataset record
-    const { data: dataset, error: datasetError } = await supabase
+    // Create dataset record using admin client for better permissions
+    const { data: dataset, error: datasetError } = await supabaseAdmin
       .from('datasets')
       .insert({
         user_id: user.id,
@@ -149,7 +156,7 @@ Deno.serve(async (req) => {
 
     for (let i = 0; i < dataRows.length; i += batchSize) {
       const batch = dataRows.slice(i, i + batchSize);
-      const { error: rowsError } = await supabase
+      const { error: rowsError } = await supabaseAdmin
         .from('data_rows')
         .insert(batch);
 
