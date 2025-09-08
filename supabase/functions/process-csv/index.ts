@@ -13,12 +13,41 @@ function parseCSV(csvText: string): { headers: string[], rows: CSVRow[] } {
   const lines = csvText.split('\n').filter(line => line.trim());
   if (lines.length === 0) throw new Error('Empty CSV file');
 
-  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+  // Handle CSV with proper parsing for quoted fields
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+      
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    result.push(current.trim());
+    return result;
+  };
+
+  const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, ''));
   const rows: CSVRow[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-    if (values.length === headers.length) {
+    const values = parseCSVLine(lines[i]);
+    if (values.length > 0 && values[0] !== '') { // Skip empty rows
       const row: CSVRow = {};
       headers.forEach((header, index) => {
         row[header] = values[index] || '';
@@ -71,9 +100,17 @@ Deno.serve(async (req) => {
       throw downloadError;
     }
 
+    if (!fileData || fileData.size === 0) {
+      throw new Error('File is empty or could not be downloaded');
+    }
+
     // Convert file to text
     const csvText = await fileData.text();
     console.log('CSV text length:', csvText.length);
+
+    if (!csvText || csvText.trim().length === 0) {
+      throw new Error('CSV file appears to be empty');
+    }
 
     // Parse CSV
     const { headers, rows } = parseCSV(csvText);

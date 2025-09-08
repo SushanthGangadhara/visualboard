@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, FileText } from 'lucide-react';
 import { useDatasets } from '@/hooks/useDatasets';
+import { useToast } from '@/hooks/use-toast';
 
 interface CSVUploadProps {
   onUploadSuccess?: (datasetId: string) => void;
@@ -15,13 +16,25 @@ export function CSVUpload({ onUploadSuccess }: CSVUploadProps) {
   const [datasetName, setDatasetName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadCSV, loading } = useDatasets();
+  const { toast } = useToast();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile && selectedFile.type === 'text/csv') {
-      setFile(selectedFile);
-      if (!datasetName) {
-        setDatasetName(selectedFile.name.replace('.csv', ''));
+    if (selectedFile) {
+      console.log('Selected file:', selectedFile.name, 'Size:', selectedFile.size, 'Type:', selectedFile.type);
+      
+      // Check if it's a CSV file
+      if (selectedFile.type === 'text/csv' || selectedFile.name.endsWith('.csv')) {
+        setFile(selectedFile);
+        if (!datasetName) {
+          setDatasetName(selectedFile.name.replace('.csv', ''));
+        }
+      } else {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please select a CSV file.',
+          variant: 'destructive',
+        });
       }
     }
   };
@@ -45,10 +58,21 @@ export function CSVUpload({ onUploadSuccess }: CSVUploadProps) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type === 'text/csv') {
-      setFile(droppedFile);
-      if (!datasetName) {
-        setDatasetName(droppedFile.name.replace('.csv', ''));
+    if (droppedFile) {
+      console.log('Dropped file:', droppedFile.name, 'Size:', droppedFile.size, 'Type:', droppedFile.type);
+      
+      // Check if it's a CSV file
+      if (droppedFile.type === 'text/csv' || droppedFile.name.endsWith('.csv')) {
+        setFile(droppedFile);
+        if (!datasetName) {
+          setDatasetName(droppedFile.name.replace('.csv', ''));
+        }
+      } else {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please drop a CSV file.',
+          variant: 'destructive',
+        });
       }
     }
   };
