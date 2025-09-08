@@ -48,8 +48,14 @@ Deno.serve(async (req) => {
       throw new Error('No authorization header');
     }
 
-    // Set auth for this request
-    supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    // Get user from auth header first
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (userError || !user) {
+      throw new Error('Invalid user token');
+    }
 
     const { datasetName, filePath } = await req.json();
 
@@ -73,14 +79,7 @@ Deno.serve(async (req) => {
     const { headers, rows } = parseCSV(csvText);
     console.log('Parsed CSV:', { headerCount: headers.length, rowCount: rows.length });
 
-    // Get user from auth header
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (userError || !user) {
-      throw new Error('Invalid user');
-    }
+    // User is already validated above
 
     // Create dataset record
     const { data: dataset, error: datasetError } = await supabase
@@ -143,9 +142,10 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error processing CSV:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred processing the CSV file';
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'An error occurred processing the CSV file'
+        error: errorMessage
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
